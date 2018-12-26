@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <canvas id="canvas" class="canvas" />
+    <canvas id="canvas" class="canvas" v-on:click.self="callbackOnClick" />
   </div>
 </template>
 
@@ -32,8 +32,8 @@ export default {
   data () {
     return {
       engine: {},
-      Body: {},
-      boxC: {}
+      boxC: {},
+      wordBodyList: []
     }
   },
   mounted () {
@@ -50,34 +50,14 @@ export default {
     let Engine = Matter.Engine
     let World = Matter.World
     let Bodies = Matter.Bodies
-    this.Body = Matter.Body
     let Events = Matter.Events
     // create an engine
     this.engine = Engine.create()
+    this.addWord('Test Test')
 
-    // create two boxes and a ground
-    let boxA = Bodies.rectangle(600, 200, 80, 80, { friction: 0.01, restitution: 0.1, density: 1.5 })
-    let boxB = Bodies.rectangle(250, 250, 180, 80, { friction: 0, restitution: 0.1 })
-    this.boxC = Bodies.rectangle(400,
-      0,
-      200,
-      100,
-      { restitution: 1.95,
-        friction: 0,
-        render: {
-          fillStyle: '#FFFFFF',
-          text: {
-            fillStyle: '#000000',
-            content: 'Test TEST',
-            size: 50
-          }
-        }
-      })
-
-    let ground = Bodies.rectangle(373, 840, 373 * 2, 120, { isStatic: true })
-    World.add(this.engine.world, [boxA, boxB, ground, this.boxC])
+    let ground = Bodies.rectangle(373, 1440, 373 * 2, 120, { isStatic: true })
+    World.add(this.engine.world, ground)
     Events.on(this.engine, 'beforeUpdate', this.matterBeforeUpdate)
-    // run the engine
     Engine.run(this.engine)
 
     // ------ NOTE: This is default render setting
@@ -98,8 +78,41 @@ export default {
     this.render()
   },
   methods: {
+    callbackOnClick () {
+      this.addWord('Test Test')
+    },
+    addWord (content) {
+      const Bodies = Matter.Bodies
+      const World = Matter.World
+      const x = Math.random() * screen.width * 2
+      const y = 0
+      const wordBody = Bodies.rectangle(
+        x,
+        y,
+        200,
+        100,
+        { restitution: 0.95,
+          friction: 0,
+          render: {
+            fillStyle: '#FFFFFF',
+            text: {
+              fillStyle: '#000000',
+              content: content,
+              size: 50
+            }
+          }
+        })
+      World.add(this.engine.world, wordBody)
+      this.wordBodyList.push(wordBody)
+    },
     matterBeforeUpdate (event) {
-      this.Body.setAngularVelocity(this.boxC, 0)
+      // NOTE: 座標が更新される前に各ボディを回転させないように設定させる
+      // http://brm.io/matter-js/docs/classes/Body.html#method_setAngularVelocity
+      const Body = Matter.Body
+      for (var i = 0; i < this.wordBodyList.length; i++) {
+        const wordBody = this.wordBodyList[i]
+        Body.setAngularVelocity(wordBody, 0)
+      }
     },
     render () {
       var bodies = Matter.Composite.allBodies(this.engine.world)
@@ -108,7 +121,7 @@ export default {
 
       window.requestAnimationFrame(this.render)
 
-      context.fillStyle = '#ff0000'
+      context.fillStyle = '#FFFFFF'
       context.fillRect(0, 0, canvas.width, canvas.height)
       context.globalAlpha = 1
       context.beginPath()
@@ -122,7 +135,7 @@ export default {
           // arial is default font family
           var fontfamily = part.render.text.family || 'Arial'
           // white text color by default
-          var color = part.render.text.color || '#FFFFFF'
+          var color = part.render.text.color || '#FF0000'
 
           if (part.render.text.size) {
             fontsize = part.render.text.size
