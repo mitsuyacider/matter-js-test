@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <canvas id="canvas" class="canvas" v-on:click.self="callbackOnClick" />
+    <canvas id="canvas" :width=screenWidth :height=screenHeight  class="canvas" v-on:click.self="callbackOnClick" />
   </div>
 </template>
 
@@ -20,8 +20,6 @@ canvas {
 </style>
 
 <script>
-import HelloWorld from './components/HelloWorld'
-// import './js/matterTest.js'
 import Matter from 'matter-js'
 
 export default {
@@ -33,13 +31,19 @@ export default {
       isRotationConstraint: false
     }
   },
+  computed: {
+    screenWidth () {
+      return screen.width * 2
+    },
+    screenHeight () {
+      return screen.height * 2
+    }
+  },
   mounted () {
     // NOTE: キャンバスサイズはdefaultで300px。attr属性もしくは
     //       直接JavaScriptで指定する必要がある
     // https://qiita.com/ShinyaOkazawa/items/9e662bf2121548f79d5f
     var canvas = document.getElementById('canvas')
-    canvas.width = screen.width * 2
-    canvas.height = screen.height * 2
     canvas.style.width = String(canvas.width / 2) + 'px'
     canvas.style.height = String(canvas.height / 2) + 'px'
 
@@ -53,7 +57,7 @@ export default {
     this.addWord('Test Test')
 
     let ground = Bodies.rectangle(373, 1440, 373 * 2, 120, { isStatic: true })
-    World.add(this.engine.world, ground)    
+    World.add(this.engine.world, ground)
     Events.on(this.engine, 'beforeUpdate', this.matterBeforeUpdate)
     Engine.run(this.engine)
 
@@ -81,7 +85,7 @@ export default {
     addWord (content) {
       const Bodies = Matter.Bodies
       const World = Matter.World
-      const x = Math.random() * screen.width * 2
+      const x = Math.random() * this.screenWidth
       const y = 0
       const wordBody = Bodies.rectangle(
         x,
