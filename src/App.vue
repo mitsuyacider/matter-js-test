@@ -31,7 +31,9 @@ export default {
   },
   data () {
     return {
-      engine: {}
+      engine: {},
+      Body: {},
+      boxC: {}
     }
   },
   mounted () {
@@ -48,20 +50,20 @@ export default {
     let Engine = Matter.Engine
     let World = Matter.World
     let Bodies = Matter.Bodies
-
+    this.Body = Matter.Body
+    let Events = Matter.Events
     // create an engine
     this.engine = Engine.create()
 
     // create two boxes and a ground
-    let boxA = Bodies.rectangle(600, 200, 80, 80, { restitution: 1.00001 })
-    let boxB = Bodies.rectangle(450, 50, 80, 80)
-    let boxC = Bodies.rectangle(400,
+    let boxA = Bodies.rectangle(600, 200, 80, 80, { friction: 0.01, restitution: 0.1, density: 1.5 })
+    let boxB = Bodies.rectangle(250, 250, 180, 80, { friction: 0, restitution: 0.1 })
+    this.boxC = Bodies.rectangle(400,
       0,
       200,
       100,
-      { restitution: 0.95,
-        friction: 0.05,
-        density: 0.0005,
+      { restitution: 1.95,
+        friction: 0,
         render: {
           fillStyle: '#FFFFFF',
           text: {
@@ -71,8 +73,10 @@ export default {
           }
         }
       })
+
     let ground = Bodies.rectangle(373, 840, 373 * 2, 120, { isStatic: true })
-    World.add(this.engine.world, [boxA, boxB, ground, boxC])
+    World.add(this.engine.world, [boxA, boxB, ground, this.boxC])
+    Events.on(this.engine, 'beforeUpdate', this.matterBeforeUpdate)
     // run the engine
     Engine.run(this.engine)
 
@@ -94,6 +98,9 @@ export default {
     this.render()
   },
   methods: {
+    matterBeforeUpdate (event) {
+      this.Body.setAngularVelocity(this.boxC, 0)
+    },
     render () {
       var bodies = Matter.Composite.allBodies(this.engine.world)
       var canvas = document.getElementById('canvas')
