@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <canvas id="canvas" :width=screenWidth :height=screenHeight  class="canvas" v-on:click.self="callbackOnClick" />
+    <canvas id="canvas" :width=screenWidth :height=screenHeight  class="canvas" />
   </div>
 </template>
 
@@ -28,7 +28,8 @@ export default {
     return {
       engine: {},
       wordBodyList: [],
-      isRotationConstraint: false
+      isRotationConstraint: false,
+      mouse: {}
     }
   },
   computed: {
@@ -49,17 +50,24 @@ export default {
 
     // module aliases
     let Engine = Matter.Engine
+    // create an engine
+    this.engine = Engine.create()
     let World = Matter.World
     let Bodies = Matter.Bodies
     let Events = Matter.Events
-    // create an engine
-    this.engine = Engine.create()
+
     this.addWord('Test Test')
 
     let ground = Bodies.rectangle(373, 1440, 373 * 2, 120, { isStatic: true })
     World.add(this.engine.world, ground)
     Events.on(this.engine, 'beforeUpdate', this.matterBeforeUpdate)
+
     Engine.run(this.engine)
+
+    this.mouse = Matter.Mouse.create(canvas)
+    // touchstartに対応してたらtouchstart、してなければclick
+    const mytap = window.ontouchstart === null ? 'touchstart' : 'click'
+    canvas.addEventListener(mytap, this.callbackOnClick)
 
     // ------ NOTE: This is default render setting
     // let Render = Matter.Render
@@ -80,7 +88,18 @@ export default {
   },
   methods: {
     callbackOnClick () {
-      this.addWord('Test Test')
+      const Query = Matter.Query
+      const query = Query.point(Matter.Composite.allBodies(this.engine.world), this.mouse.position)
+
+      // NOTE: Bodyがクリックされえていれば、Body情報がqueryに入っている
+      if (query.length > 0) {
+        const part = query[0]
+        if (part.render.text) {
+          console.log('Tapped Body: ' + part.render.text.content)
+        }
+      } else {
+        this.addWord('Test Test')
+      }
     },
     addWord (content) {
       const Bodies = Matter.Bodies
