@@ -26,14 +26,11 @@ import Matter from 'matter-js'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  },
   data () {
     return {
       engine: {},
-      boxC: {},
-      wordBodyList: []
+      wordBodyList: [],
+      isRotationConstraint: false
     }
   },
   mounted () {
@@ -56,7 +53,7 @@ export default {
     this.addWord('Test Test')
 
     let ground = Bodies.rectangle(373, 1440, 373 * 2, 120, { isStatic: true })
-    World.add(this.engine.world, ground)
+    World.add(this.engine.world, ground)    
     Events.on(this.engine, 'beforeUpdate', this.matterBeforeUpdate)
     Engine.run(this.engine)
 
@@ -69,7 +66,7 @@ export default {
     //   options: {
     //     wireframes: false, // ワイヤーフレームモードをoff
     //     width: 300, // canvasのwidth(横幅)
-    //     height: 400, // canvasのheight(高さ)
+    //     height: 400, // cakeynvasのheight(高さ)
     //     background: 'rgba(255, 0, 0, 0.5)'
     //   }
     // })
@@ -108,10 +105,12 @@ export default {
     matterBeforeUpdate (event) {
       // NOTE: 座標が更新される前に各ボディを回転させないように設定させる
       // http://brm.io/matter-js/docs/classes/Body.html#method_setAngularVelocity
-      const Body = Matter.Body
-      for (var i = 0; i < this.wordBodyList.length; i++) {
-        const wordBody = this.wordBodyList[i]
-        Body.setAngularVelocity(wordBody, 0)
+      if (this.isRotationConstraint) {
+        const Body = Matter.Body
+        for (var i = 0; i < this.wordBodyList.length; i++) {
+          const wordBody = this.wordBodyList[i]
+          Body.setAngularVelocity(wordBody, 0)
+        }
       }
     },
     render () {
